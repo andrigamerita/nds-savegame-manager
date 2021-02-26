@@ -56,6 +56,8 @@ using namespace std;
 
 static u32 pitch = 0x40000;
 
+extern char server_address[256];
+extern char savhexdump[262144];
 
 // ---------------------------------------------------------------------
 u8 log2trunc(u32 size0)
@@ -765,21 +767,25 @@ static netbuf *buf = NULL;
 
 void hwLoginFTP()
 {
+	iprintf("Connecting to FTP server...\n");
+	iprintf(server_address);
+
 	int j;
 	static int jmax = 10;
 
-	displayMessage2F(STR_HW_FTP_SEEK_AP);
+	/*displayMessage2F(STR_HW_FTP_SEEK_AP);
 	if (!Wifi_InitDefault(true)) {
 		displayWarning2F(STR_HW_FTP_ERR_AP);
 		while(1);
 	}
-	displayMessage2F(STR_HW_FTP_SEEK_FTP);
-	sprintf(txt, "%s:%i", ftp_ip, ftp_port);
+	displayMessage2F(STR_HW_FTP_SEEK_FTP);*/
+	//sprintf(txt, "%s:%i", ftp_ip, ftp_port);
 	j = 0;
-	while (!FtpConnect(txt, &buf)) {
+	while (!FtpConnect(server_address, &buf)) {
 		j++;
 		if (j >= jmax) {
-			displayWarning2F(STR_HW_FTP_ERR_FTP);
+			//displayWarning2F(STR_HW_FTP_ERR_FTP);
+			iprintf("FTP Error.\n>> ");
 			while(1);
 		}
 		swiDelay(10000);
@@ -789,7 +795,7 @@ void hwLoginFTP()
 	while (!FtpLogin(ftp_user, ftp_pass, buf)) {
 		j++;
 		if (j >= jmax) {
-			displayWarning2F(STR_HW_FTP_ERR_LOGIN);
+			iprintf("FTP Error.\n>> ");
 			while(1);
 		}
 		swiDelay(10000);
@@ -799,16 +805,18 @@ void hwLoginFTP()
 
 void hwBackupFTP(bool dlp)
 {
+	iprintf("// == Backup function ==\n");
+
 	netbuf *ndata;
 
 	// Dump save and write it to FTP server
 	// First: swap card
-	if (!dlp) {
+	/*if (!dlp) {
 		if ( !swap_cart(true) ) {
 			return;
 		}
-	}
-	displayPrintUpper();
+	}*/
+	/*displayPrintUpper();*/
 	uint8 size = auxspi_save_size_log_2(slot_1_type);
 	uint8 type = auxspi_save_type(slot_1_type);
 	
@@ -991,15 +999,30 @@ void hwRestoreFTP(bool dlp)
 	displayMessageF(STR_EMPTY);
 }
 
+//template <typename CharT>
+//void hexdump(std::string_view s, const CharT c) {
+char hexdump(char datachar, char savhexdumpchar) {
+    /*const uint8_t* data {reinterpret_cast<const uint8_t*>(&c)};
+    std::cout << "'" << s << "' \t" << std::hex
+              << std::uppercase << std::setfill('0');
+    for (auto i {0U}; i != sizeof(CharT); ++i){
+        std::cout << std::setw(2) << static_cast<unsigned>(data[i]) << ' ';
+    }
+    std::cout << '\n';*/
+	return "A";
+}
+
 // ------------------------------------------------------------
 void hwBackupGBA(u8 type)
 {
+	iprintf("// == hwBackupGBA ==");
+
 	if ((type == 0) || (type > 5))
 		return;
 
 	if ((type == 1) || (type == 2)) {
 		// This is not to be translated, it will be removed at some point.
-		displayMessageF(STR_STR, "I can't read this save type\nyet. Please use Rudolphs tool\ninstead.");
+		//displayMessageF(STR_STR, "I can't read this save type\nyet. Please use Rudolphs tool\ninstead.");
 		return;
 	}
 	
@@ -1007,22 +1030,28 @@ void hwBackupGBA(u8 type)
 	char fname[256] = "";
 	fileSelect("/", path, fname, 0, true, false);
 	
-	if (!fname[0]) {
+	/*if (!fname[0]) {
 		find_unused_filename((char*)0x080000a0, path, fname);
-	}
+	}*/
 	char fullpath[512];
-	sprintf(fullpath, "%s/%s", path, fname);
+	//sprintf(fullpath, "%s/%s", path, fname);
 	
-	displayMessage2F(STR_HW_READ_GAME);
+	//displayMessage2F(STR_HW_READ_GAME);
 	uint32 size = gbaGetSaveSize(type);
 	gbaReadSave(data, 0, size, type);
 	
-	displayMessage2F(STR_HW_WRITE_FILE, fullpath);
-	FILE *file = fopen(fullpath, "wb");
-	fwrite(data, 1, size, file);
-	fclose(file);
+	//displayMessage2F(STR_HW_WRITE_FILE, fullpath);
+	//FILE *file = fopen(fullpath, "wb");
+	//fwrite(data, 1, size, file);
 
-	displayStateF(STR_STR, "Done!");
+	//hexdump(data[0], savhexdump[0]);
+	savhexdump[0] = (int)data[0];
+
+	iprintf(savhexdump[0]);
+	sleep(3);
+	//fclose(file);
+
+	//displayStateF(STR_STR, "Done!");
 	//while(1);
 }
 

@@ -69,6 +69,7 @@ void hwErase();
 void hwBackupDSi();
 void hwRestoreDSi();
 
+void hwLoginFTP();
 void hwBackupFTP(bool dlp = false);
 void hwRestoreFTP(bool dlp = false);
 
